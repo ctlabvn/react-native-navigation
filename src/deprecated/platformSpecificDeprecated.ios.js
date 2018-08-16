@@ -1,8 +1,8 @@
 /*eslint-disable*/
-import {Component} from 'react';
-import {findNodeHandle} from 'react-native';
+import { Component } from 'react';
+import { findNodeHandle } from 'react-native';
 import Navigation from './../Navigation';
-import Controllers, {Modal, Notification, ScreenUtils} from './controllers';
+import Controllers, { Modal, Notification, ScreenUtils } from './controllers';
 const React = Controllers.hijackReact();
 const {
   ControllerRegistry,
@@ -21,13 +21,16 @@ async function startTabBasedApp(params) {
   }
 
   const controllerID = _.uniqueId('controllerID');
-  params.tabs.map(function (tab, index) {
+  params.tabs.map(function(tab, index) {
     const navigatorID = controllerID + '_nav' + index;
     const screenInstanceID = _.uniqueId('screenInstanceID');
 
     const components = tab.components;
     if (!tab.screen && !components) {
-      console.error('startTabBasedApp(params): every tab must include a screen property, take a look at tab#' + (index + 1));
+      console.error(
+        'startTabBasedApp(params): every tab must include a screen property, take a look at tab#' +
+          (index + 1)
+      );
       return;
     }
 
@@ -38,20 +41,23 @@ async function startTabBasedApp(params) {
 
       components.forEach(component => {
         const screenInstanceID = _.uniqueId('screenInstanceID');
-  
+
         const {
           navigatorStyle,
           navigatorButtons,
           navigatorEventID
-        } = _mergeScreenSpecificSettings(component.screen, screenInstanceID, params);
+        } = _mergeScreenSpecificSettings(
+          component.screen,
+          screenInstanceID,
+          params
+        );
         _saveNavigatorButtonsProps(navigatorButtons);
         _saveNavBarComponentProps(navigatorStyle);
         const passProps = Object.assign({}, component.passProps);
         passProps.navigatorID = navigatorID;
         passProps.screenInstanceID = screenInstanceID;
         passProps.navigatorEventID = navigatorEventID;
-  
-  
+
         component.navigationParams = {
           screenInstanceID,
           navigatorStyle,
@@ -60,15 +66,13 @@ async function startTabBasedApp(params) {
           navigatorID: navigatorID,
           passProps
         };
-  
+
         component.subtitle = params.subtitle;
         component.passProps = passProps;
         component.navigatorStyle = navigatorStyle;
 
         savePassProps(component);
-  
       });
-        
     }
 
     const {
@@ -88,34 +92,51 @@ async function startTabBasedApp(params) {
   });
 
   const Controller = Controllers.createClass({
-    render: function () {
+    render: function() {
       if (!params.drawer || (!params.drawer.left && !params.drawer.right)) {
         return this.renderBody();
       } else {
         const navigatorID = controllerID + '_drawer';
 
         const leftScreenId = _.uniqueId('screenInstanceID');
-        const rightScreenId = _.uniqueId('screenInstanceID')
+        const rightScreenId = _.uniqueId('screenInstanceID');
 
-        const {navigatorStyle: leftNavigatorStyle} = params.drawer.left
-          ? _mergeScreenSpecificSettings(params.drawer.left.screen, leftScreenId, params.drawer.left)
+        const { navigatorStyle: leftNavigatorStyle } = params.drawer.left
+          ? _mergeScreenSpecificSettings(
+              params.drawer.left.screen,
+              leftScreenId,
+              params.drawer.left
+            )
           : {};
 
-        const {navigatorStyle: rightNavigatorStyle} = params.drawer.right
-          ? _mergeScreenSpecificSettings(params.drawer.right.screen, rightScreenId, params.drawer.right)
+        const { navigatorStyle: rightNavigatorStyle } = params.drawer.right
+          ? _mergeScreenSpecificSettings(
+              params.drawer.right.screen,
+              rightScreenId,
+              params.drawer.right
+            )
           : {};
 
         return (
-          <DrawerControllerIOS id={navigatorID}
-            componentLeft={params.drawer.left ? params.drawer.left.screen : undefined}
+          <DrawerControllerIOS
+            id={navigatorID}
+            componentLeft={
+              params.drawer.left ? params.drawer.left.screen : undefined
+            }
             styleLeft={leftNavigatorStyle}
-            passPropsLeft={{navigatorID: navigatorID}}
-            componentRight={params.drawer.right ? params.drawer.right.screen : undefined}
+            passPropsLeft={{ navigatorID: navigatorID }}
+            componentRight={
+              params.drawer.right ? params.drawer.right.screen : undefined
+            }
             styleRight={rightNavigatorStyle}
-            passPropsRight={{navigatorID: navigatorID}}
+            passPropsRight={{ navigatorID: navigatorID }}
             disableOpenGesture={params.drawer.disableOpenGesture}
             type={params.drawer.type ? params.drawer.type : 'MMDrawer'}
-            animationType={params.drawer.animationType ? params.drawer.animationType : 'slide'}
+            animationType={
+              params.drawer.animationType
+                ? params.drawer.animationType
+                : 'slide'
+            }
             style={params.drawer.style}
             appStyle={params.appStyle}
           >
@@ -124,37 +145,40 @@ async function startTabBasedApp(params) {
         );
       }
     },
-    renderBody: function () {
+    renderBody: function() {
       return (
         <TabBarControllerIOS
           id={controllerID + '_tabs'}
           style={params.tabsStyle}
           appStyle={params.appStyle}
-          initialTabIndex={params.initialTabIndex}>
-          {
-            params.tabs.map(function (tab, index) {
-              return (
-                <TabBarControllerIOS.Item {...tab} title={tab.label}>
-                  <NavigationControllerIOS
-                    id={tab.navigationParams.navigatorID}
-                    title={tab.title}
-                    subtitle={tab.subtitle}
-                    titleImage={tab.titleImage}
-                    component={tab.screen}
-                    components={tab.components}
-                    passProps={{
-                      navigatorID: tab.navigationParams.navigatorID,
-                      screenInstanceID: tab.navigationParams.screenInstanceID,
-                      navigatorEventID: tab.navigationParams.navigatorEventID,
-                    }}
-                    style={tab.navigationParams.navigatorStyle}
-                    leftButtons={tab.navigationParams.navigatorButtons.leftButtons}
-                    rightButtons={tab.navigationParams.navigatorButtons.rightButtons}
-                  />
-                </TabBarControllerIOS.Item>
-              );
-            })
-          }
+          initialTabIndex={params.initialTabIndex}
+        >
+          {params.tabs.map(function(tab, index) {
+            return (
+              <TabBarControllerIOS.Item {...tab} title={tab.label}>
+                <NavigationControllerIOS
+                  id={tab.navigationParams.navigatorID}
+                  title={tab.title}
+                  subtitle={tab.subtitle}
+                  titleImage={tab.titleImage}
+                  component={tab.screen}
+                  components={tab.components}
+                  passProps={{
+                    navigatorID: tab.navigationParams.navigatorID,
+                    screenInstanceID: tab.navigationParams.screenInstanceID,
+                    navigatorEventID: tab.navigationParams.navigatorEventID
+                  }}
+                  style={tab.navigationParams.navigatorStyle}
+                  leftButtons={
+                    tab.navigationParams.navigatorButtons.leftButtons
+                  }
+                  rightButtons={
+                    tab.navigationParams.navigatorButtons.rightButtons
+                  }
+                />
+              </TabBarControllerIOS.Item>
+            );
+          })}
         </TabBarControllerIOS>
       );
     }
@@ -163,7 +187,11 @@ async function startTabBasedApp(params) {
   _.set(params, 'passProps.timestamp', Date.now());
 
   ControllerRegistry.registerController(controllerID, () => Controller);
-  return await ControllerRegistry.setRootController(controllerID, params.animationType, params.passProps || {});
+  return await ControllerRegistry.setRootController(
+    controllerID,
+    params.animationType,
+    params.passProps || {}
+  );
 }
 
 async function startSingleScreenApp(params) {
@@ -188,14 +216,17 @@ async function startSingleScreenApp(params) {
         navigatorStyle,
         navigatorButtons,
         navigatorEventID
-      } = _mergeScreenSpecificSettings(component.screen, screenInstanceID, params);
+      } = _mergeScreenSpecificSettings(
+        component.screen,
+        screenInstanceID,
+        params
+      );
       _saveNavigatorButtonsProps(navigatorButtons);
       _saveNavBarComponentProps(navigatorStyle);
       const passProps = Object.assign({}, params.passProps);
       passProps.navigatorID = navigatorID;
       passProps.screenInstanceID = screenInstanceID;
       passProps.navigatorEventID = navigatorEventID;
-
 
       component.navigationParams = {
         screenInstanceID,
@@ -210,15 +241,15 @@ async function startSingleScreenApp(params) {
       component.passProps = passProps;
 
       savePassProps(component);
-
     });
   }
 
   if (!screen.screen) {
-    console.error('startSingleScreenApp(params): screen must include a screen property');
+    console.error(
+      'startSingleScreenApp(params): screen must include a screen property'
+    );
     return;
   }
-
 
   const screenInstanceID = _.uniqueId('screenInstanceID');
   const {
@@ -244,20 +275,29 @@ async function startSingleScreenApp(params) {
   };
 
   const Controller = Controllers.createClass({
-    render: function () {
+    render: function() {
       if (!params.drawer || (!params.drawer.left && !params.drawer.right)) {
         return this.renderBody();
       } else {
         const navigatorID = controllerID + '_drawer';
         return (
-          <DrawerControllerIOS id={navigatorID}
-            componentLeft={params.drawer.left ? params.drawer.left.screen : undefined}
-            passPropsLeft={{navigatorID: navigatorID}}
-            componentRight={params.drawer.right ? params.drawer.right.screen : undefined}
-            passPropsRight={{navigatorID: navigatorID}}
+          <DrawerControllerIOS
+            id={navigatorID}
+            componentLeft={
+              params.drawer.left ? params.drawer.left.screen : undefined
+            }
+            passPropsLeft={{ navigatorID: navigatorID }}
+            componentRight={
+              params.drawer.right ? params.drawer.right.screen : undefined
+            }
+            passPropsRight={{ navigatorID: navigatorID }}
             disableOpenGesture={params.drawer.disableOpenGesture}
             type={params.drawer.type ? params.drawer.type : 'MMDrawer'}
-            animationType={params.drawer.animationType ? params.drawer.animationType : 'slide'}
+            animationType={
+              params.drawer.animationType
+                ? params.drawer.animationType
+                : 'slide'
+            }
             style={params.drawer.style}
             appStyle={params.appStyle}
           >
@@ -266,7 +306,7 @@ async function startSingleScreenApp(params) {
         );
       }
     },
-    renderBody: function () {
+    renderBody: function() {
       return (
         <NavigationControllerIOS
           id={navigatorID}
@@ -287,13 +327,21 @@ async function startSingleScreenApp(params) {
   savePassProps(params);
 
   ControllerRegistry.registerController(controllerID, () => Controller);
-  return await ControllerRegistry.setRootController(controllerID, params.animationType, params.passProps || {});
+  return await ControllerRegistry.setRootController(
+    controllerID,
+    params.animationType,
+    params.passProps || {}
+  );
 }
 
 function _mergeScreenSpecificSettings(screenID, screenInstanceID, params) {
   const screenClass = Navigation.getRegisteredScreen(screenID);
   if (!screenClass) {
-    console.error('Cannot create screen ' + screenID + '. Are you it was registered with Navigation.registerScreen?');
+    console.error(
+      'Cannot create screen ' +
+        screenID +
+        '. Are you it was registered with Navigation.registerScreen?'
+    );
     return;
   }
   const navigatorStyle = Object.assign({}, screenClass.navigatorStyle);
@@ -316,7 +364,7 @@ function _mergeScreenSpecificSettings(screenID, screenInstanceID, params) {
       navigatorButtons.rightButtons[i].onPress = navigatorEventID;
     }
   }
-  return {navigatorStyle, navigatorButtons, navigatorEventID};
+  return { navigatorStyle, navigatorButtons, navigatorEventID };
 }
 
 function navigatorPush(navigator, params) {
@@ -327,11 +375,13 @@ function navigatorPush(navigator, params) {
   let previewViewID;
   const screenInstanceID = _.uniqueId('screenInstanceID');
   if (params.previewView instanceof Component) {
-    previewViewID = findNodeHandle(params.previewView)
+    previewViewID = findNodeHandle(params.previewView);
   } else if (typeof params.previewView === 'number') {
     previewViewID = params.previewView;
   } else if (params.previewView) {
-    console.error('Navigator.push(params): params.previewView is not a valid react view');
+    console.error(
+      'Navigator.push(params): params.previewView is not a valid react view'
+    );
   }
   const {
     navigatorStyle,
@@ -393,6 +443,14 @@ function navigatorPopToRoot(navigator, params) {
   });
 }
 
+function navigatorPopTo(navigator, params) {
+  Controllers.NavigationControllerIOS(navigator.navigatorID).popTo({
+    screenId: params.screenId,
+    animated: params.animated,
+    animationType: params.animationType
+  });
+}
+
 function navigatorResetTo(navigator, params) {
   if (!params.screen) {
     console.error('Navigator.resetTo(params): params.screen is required');
@@ -437,7 +495,9 @@ function navigatorResetTo(navigator, params) {
 
 function navigatorSetDrawerEnabled(navigator, params) {
   const controllerID = navigator.navigatorID.split('_')[0];
-  Controllers.NavigationControllerIOS(controllerID + '_drawer').setDrawerEnabled(params)
+  Controllers.NavigationControllerIOS(
+    controllerID + '_drawer'
+  ).setDrawerEnabled(params);
 }
 
 function navigatorSetTitle(navigator, params) {
@@ -468,14 +528,14 @@ function navigatorSetTitleImage(navigator, params) {
 
 function navigatorToggleNavBar(navigator, params) {
   Controllers.NavigationControllerIOS(navigator.navigatorID).setHidden({
-    hidden: ((params.to === 'hidden') ? true : false),
+    hidden: params.to === 'hidden' ? true : false,
     animated: params.animated
   });
 }
 
 function navigatorSetStyle(navigator, params) {
   _saveNavBarComponentProps(params);
-  Controllers.NavigationControllerIOS(navigator.navigatorID).setStyle(params)
+  Controllers.NavigationControllerIOS(navigator.navigatorID).setStyle(params);
 }
 
 function navigatorToggleDrawer(navigator, params) {
@@ -530,7 +590,7 @@ function navigatorSetTabButton(navigator, params) {
       tabIndex: params.tabIndex,
       icon: params.icon,
       selectedIcon: params.selectedIcon,
-      label: params.label,
+      label: params.label
     });
   } else {
     Controllers.TabBarControllerIOS(controllerID + '_tabs').setTabButton({
@@ -538,7 +598,7 @@ function navigatorSetTabButton(navigator, params) {
       contentType: 'NavigationControllerIOS',
       icon: params.icon,
       selectedIcon: params.selectedIcon,
-      label: params.label,
+      label: params.label
     });
   }
 }
@@ -564,14 +624,20 @@ function navigatorSetButtons(navigator, navigatorEventID, params) {
     for (let i = 0; i < buttons.length; i++) {
       buttons[i].onPress = navigatorEventID;
     }
-    Controllers.NavigationControllerIOS(navigator.navigatorID).setLeftButtons(buttons, params.animated);
+    Controllers.NavigationControllerIOS(navigator.navigatorID).setLeftButtons(
+      buttons,
+      params.animated
+    );
   }
   if (params.rightButtons) {
     const buttons = params.rightButtons.slice(); // clone
     for (let i = 0; i < buttons.length; i++) {
       buttons[i].onPress = navigatorEventID;
     }
-    Controllers.NavigationControllerIOS(navigator.navigatorID).setRightButtons(buttons, params.animated);
+    Controllers.NavigationControllerIOS(navigator.navigatorID).setRightButtons(
+      buttons,
+      params.animated
+    );
   }
 }
 
@@ -605,7 +671,7 @@ function showModal(params) {
   };
 
   const Controller = Controllers.createClass({
-    render: function () {
+    render: function() {
       return (
         <NavigationControllerIOS
           id={navigatorID}
@@ -616,7 +682,8 @@ function showModal(params) {
           passProps={passProps}
           style={navigatorStyle}
           leftButtons={navigatorButtons.leftButtons}
-          rightButtons={navigatorButtons.rightButtons} />
+          rightButtons={navigatorButtons.rightButtons}
+        />
       );
     }
   });
@@ -725,19 +792,25 @@ function savePassProps(params) {
   //TODO this needs to be handled in a common place,
   //TODO also, all global passProps should be handled differently
   if (params.navigationParams && params.passProps) {
-    PropRegistry.save(params.navigationParams.screenInstanceID, params.passProps);
+    PropRegistry.save(
+      params.navigationParams.screenInstanceID,
+      params.passProps
+    );
   }
 
   if (params.screen && params.screen.passProps) {
-    PropRegistry.save(params.screen.navigationParams.screenInstanceID, params.screen.passProps);
+    PropRegistry.save(
+      params.screen.navigationParams.screenInstanceID,
+      params.screen.passProps
+    );
   }
 
   if (_.get(params, 'screen.topTabs')) {
-    _.forEach(params.screen.topTabs, (tab) => savePassProps(tab));
+    _.forEach(params.screen.topTabs, tab => savePassProps(tab));
   }
 
   if (params.tabs) {
-    _.forEach(params.tabs, (tab) => {
+    _.forEach(params.tabs, tab => {
       if (!tab.passProps) {
         tab.passProps = params.passProps;
       }
@@ -761,24 +834,27 @@ async function getCurrentlyVisibleScreenId() {
 function _saveNavBarComponentProps(navigatorStyle) {
   if (navigatorStyle.navBarCustomViewInitialProps) {
     const passPropsKey = _.uniqueId('navBarComponent');
-    PropRegistry.save(passPropsKey, navigatorStyle.navBarCustomViewInitialProps);
-    navigatorStyle.navBarCustomViewInitialProps = {passPropsKey};
+    PropRegistry.save(
+      passPropsKey,
+      navigatorStyle.navBarCustomViewInitialProps
+    );
+    navigatorStyle.navBarCustomViewInitialProps = { passPropsKey };
   }
 }
 
-function _saveNavigatorButtonsProps({rightButtons, leftButtons}) {
+function _saveNavigatorButtonsProps({ rightButtons, leftButtons }) {
   _saveNavigatorButtonsPassProps(rightButtons);
   _saveNavigatorButtonsPassProps(leftButtons);
 }
 
 function _saveNavigatorButtonsPassProps(buttons = []) {
-  buttons.forEach((button) => {
+  buttons.forEach(button => {
     if (button.component) {
       const passPropsKey = _.uniqueId('customButtonComponent');
       PropRegistry.save(passPropsKey, button.passProps);
-      button.passProps = {passPropsKey};
+      button.passProps = { passPropsKey };
     }
-  })
+  });
 }
 
 async function getLaunchArgs() {
@@ -791,6 +867,7 @@ export default {
   navigatorPush,
   navigatorPop,
   navigatorPopToRoot,
+  navigatorPopTo,
   navigatorResetTo,
   showModal,
   dismissModal,

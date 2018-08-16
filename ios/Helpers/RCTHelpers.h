@@ -16,7 +16,5 @@
 + (NSString *)getTimestampString;
 + (UIColor *)colorFromHexString:(NSString *)hexString;
 + (NSString *)hexStringFromColor:(UIColor *)color;
-+ (UIImage *) getImageForFont:(NSString*)fontName withGlyph:(NSString*)glyph withFontSize:(CGFloat)fontSize withColor:(NSString *)hexColor;
-
 + (UIImage *)UIImage:(id)json;
 @end

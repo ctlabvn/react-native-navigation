@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import ReactNative, {
   AppRegistry,
   NativeModules,
+  PixelRatio,
   processColor
 } from 'react-native';
 import _ from 'lodash';
@@ -16,12 +17,13 @@ import * as newPlatformSpecific from './../platformSpecific';
 /* for android we need to hack a little bit:
 /* we will convert font to scheme like font://fontName:fontSize:color:glyph
 **/
+const scale = Math.floor(PixelRatio.get());
 const resolveAssetSource = require('react-native/Libraries/Image/resolveAssetSource');
 const resolveAssetSourceUri = source => {
   if (source.fontName) {
-    return `font://${source.fontName}:${source.fontSize}:${source.color}:${
-      source.glyph
-    }`;
+    return `font://${source.fontName}:${source.fontSize * scale}:${
+      source.color
+    }:${source.glyph}`;
   }
   return resolveAssetSource(source).uri;
 };
@@ -153,6 +155,17 @@ function navigatorPopToRoot(navigator, params) {
   adapted.timestamp = Date.now();
 
   newPlatformSpecific.popToRoot(adapted);
+}
+
+function navigatorPopTo(navigator, params) {
+  addNavigatorParams(params, navigator);
+
+  params.screenId = params.screenId;
+  let adapted = adaptNavigationStyleToScreenStyle(params);
+  adapted = adaptNavigationParams(adapted);
+  adapted.timestamp = Date.now();
+
+  newPlatformSpecific.popTo(adapted);
 }
 
 function navigatorResetTo(navigator, params) {
@@ -944,6 +957,7 @@ export default {
   navigatorPush,
   navigatorPop,
   navigatorPopToRoot,
+  navigatorPopTo,
   navigatorResetTo,
   showModal,
   dismissModal,

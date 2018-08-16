@@ -73,6 +73,12 @@ class ModalController implements ScreenStackContainer, Modal.OnModalDismissedLis
         stack.peek().popToRoot(params);
     }
 
+    // modal is easy, just popTo with seek internal without animation
+    @Override
+    public void popTo(ScreenParams params) {
+        stack.peek().popTo(params);
+    }
+
     @Override
     public void newStack(ScreenParams params) {
         stack.peek().newStack(params);

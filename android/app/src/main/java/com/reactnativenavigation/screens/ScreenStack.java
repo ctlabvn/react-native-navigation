@@ -275,6 +275,52 @@ public class ScreenStack {
         }
     }
 
+    public void popTo(final String screenInstanceId, final boolean animated, final double jsPopTimestamp, @Nullable final OnScreenPop onScreenPop) {
+        if (keyboardVisibilityDetector.isKeyboardVisible()) {
+            keyboardVisibilityDetector.setKeyboardCloseListener(new Runnable() {
+                @Override
+                public void run() {
+                    keyboardVisibilityDetector.setKeyboardCloseListener(null);
+                    popToInternal(screenInstanceId, animated, jsPopTimestamp, onScreenPop);
+                }
+            });
+            keyboardVisibilityDetector.closeKeyboard();
+        } else {
+            popToInternal(screenInstanceId, animated, jsPopTimestamp, onScreenPop);
+        }
+    }
+
+    private void popToInternal(final String screenInstanceId, final boolean animated, double jsPopTimestamp, @Nullable final OnScreenPop onScreenPop) {
+        boolean found = false;
+        int popCount = 0;
+        for (Screen screen : stack) {
+            if(screen.getScreenInstanceId().equals(screenInstanceId)){
+                found = true;
+                break;
+            }
+            popCount++;
+        }
+
+        if(!found){
+            Log.w(TAG, "Nothing to pop");
+            return;
+        }
+
+        if(popCount == 0){
+            Log.w(TAG, "Already pop to");
+            return;
+        }
+
+        // pop previous screens
+        while (popCount>0){
+            popInternal(animated, jsPopTimestamp, null);
+            popCount--;
+        }
+
+        // finally got it
+        popInternal(animated, jsPopTimestamp, onScreenPop);
+    }
+
     public void destroy() {
         for (Screen screen : stack) {
             screen.destroy();

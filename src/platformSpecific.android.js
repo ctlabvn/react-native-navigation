@@ -1,5 +1,5 @@
-import React, {Component} from 'react';
-import {AppRegistry, NativeModules} from 'react-native';
+import React, { Component } from 'react';
+import { AppRegistry, NativeModules } from 'react-native';
 import _ from 'lodash';
 import PropRegistry from './PropRegistry';
 
@@ -23,6 +23,10 @@ function popToRoot(screenParams) {
   NativeReactModule.popToRoot(screenParams);
 }
 
+function popTo(screenParams) {
+  NativeReactModule.popTo(screenParams);
+}
+
 function newStack(screenParams) {
   savePassProps(screenParams);
   NativeReactModule.newStack(screenParams);
@@ -44,8 +48,20 @@ function setScreenTitleBarSubtitle(screenInstanceID, subtitle) {
   NativeReactModule.setScreenTitleBarSubtitle(screenInstanceID, subtitle);
 }
 
-function setScreenButtons(screenInstanceID, navigatorEventID, rightButtons, leftButton, fab) {
-  NativeReactModule.setScreenButtons(screenInstanceID, navigatorEventID, rightButtons, leftButton, fab);
+function setScreenButtons(
+  screenInstanceID,
+  navigatorEventID,
+  rightButtons,
+  leftButton,
+  fab
+) {
+  NativeReactModule.setScreenButtons(
+    screenInstanceID,
+    navigatorEventID,
+    rightButtons,
+    leftButton,
+    fab
+  );
 }
 
 function showModal(screenParams) {
@@ -82,11 +98,17 @@ function dismissInAppNotification(params) {
 // eslint-disable-next-line max-statements
 function savePassProps(params) {
   if (params.navigationParams && params.passProps) {
-    PropRegistry.save(params.navigationParams.screenInstanceID, params.passProps);
+    PropRegistry.save(
+      params.navigationParams.screenInstanceID,
+      params.passProps
+    );
   }
 
   if (params.screen && params.screen.passProps) {
-    PropRegistry.save(params.screen.navigationParams.screenInstanceID, params.screen.passProps);
+    PropRegistry.save(
+      params.screen.navigationParams.screenInstanceID,
+      params.screen.passProps
+    );
   }
 
   if (_.get(params, 'screen.screens')) {
@@ -94,20 +116,20 @@ function savePassProps(params) {
   }
 
   if (_.get(params, 'screen.topTabs')) {
-    _.forEach(params.screen.topTabs, (tab) => savePassProps(tab));
+    _.forEach(params.screen.topTabs, tab => savePassProps(tab));
   }
 
   if (params.topTabs) {
-    _.forEach(params.topTabs, (tab) => savePassProps(tab));
+    _.forEach(params.topTabs, tab => savePassProps(tab));
   }
 
   if (params.tabs) {
-    _.forEach(params.tabs, (tab) => {
+    _.forEach(params.tabs, tab => {
       if (!tab.passProps) {
         tab.passProps = params.passProps;
       }
       savePassProps(tab);
-      
+
       if (tab.screens) {
         _.forEach(tab.screens, savePassProps);
       }
@@ -115,10 +137,16 @@ function savePassProps(params) {
   }
 
   if (params.sideMenu && params.sideMenu.left) {
-    PropRegistry.save(params.sideMenu.left.navigationParams.screenInstanceID, params.sideMenu.left.passProps);
+    PropRegistry.save(
+      params.sideMenu.left.navigationParams.screenInstanceID,
+      params.sideMenu.left.passProps
+    );
   }
   if (params.sideMenu && params.sideMenu.right) {
-    PropRegistry.save(params.sideMenu.right.navigationParams.screenInstanceID, params.sideMenu.right.passProps);
+    PropRegistry.save(
+      params.sideMenu.right.navigationParams.screenInstanceID,
+      params.sideMenu.right.passProps
+    );
   }
 }
 
@@ -175,7 +203,11 @@ function dismissSnackbar() {
 }
 
 function showContextualMenu(screenInstanceID, params, onButtonPressed) {
-  NativeReactModule.showContextualMenu(screenInstanceID, params, onButtonPressed);
+  NativeReactModule.showContextualMenu(
+    screenInstanceID,
+    params,
+    onButtonPressed
+  );
 }
 
 function dismissContextualMenu(screenInstanceID) {
@@ -206,6 +238,7 @@ module.exports = {
   startApp,
   push,
   pop,
+  popTo,
   popToRoot,
   newStack,
   toggleTopBarVisible,

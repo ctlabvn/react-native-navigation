@@ -425,6 +425,26 @@ public class BottomTabsLayout extends BaseLayout implements AHBottomNavigation.O
         });
     }
 
+
+    @Override
+    public void popTo(final ScreenParams params) {
+        performOnStack(params.getNavigatorId(), new Task<ScreenStack>() {
+            @Override
+            public void run(final ScreenStack stack) {
+                stack.popTo(params.screenId, params.animateScreenTransitions, params.timestamp, new ScreenStack.OnScreenPop() {
+                    @Override
+                    public void onScreenPopAnimationEnd() {
+                        if (isCurrentStack(stack)) {
+                            setBottomTabsStyleFromCurrentScreen();
+                            alignSnackbarContainerWithBottomTabs((LayoutParams) snackbarAndFabContainer.getLayoutParams(), params.styleParams);
+                            EventBus.instance.post(new ScreenChangedEvent(stack.peek().getScreenParams()));
+                        }
+                    }
+                });
+            }
+        });
+    }
+
     @Override
     public void newStack(final ScreenParams params) {
         performOnStack(params.getNavigatorId(), new Task<ScreenStack>() {

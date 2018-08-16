@@ -185,8 +185,13 @@ class Modal extends Dialog implements DialogInterface.OnDismissListener, ScreenS
     }
 
     @Override
-    public void pop(ScreenParams screenParams) {
-        layout.pop(screenParams);
+    public void pop(ScreenParams params) {
+        layout.pop(params);
+    }
+
+    @Override
+    public void popTo(ScreenParams params) {
+        layout.popTo(params);
     }
 
     @Override

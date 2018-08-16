@@ -218,37 +218,86 @@
             lroundf(b * 255)];
 }
 
-+ (UIColor *)colorFromHexString:(NSString *)hexString {
++ (UIColor *)colorFromHexString:(NSString *)hexColor {
     unsigned rgbValue = 0;
-    NSScanner *scanner = [NSScanner scannerWithString:hexString];
+    NSScanner *scanner = [NSScanner scannerWithString:hexColor];
     [scanner setScanLocation:1]; // bypass '#' character
     [scanner scanHexInt:&rgbValue];
     return [UIColor colorWithRed:((rgbValue & 0xFF0000) >> 16)/255.0 green:((rgbValue & 0xFF00) >> 8)/255.0 blue:(rgbValue & 0xFF)/255.0 alpha:1.0];
 }
 
-+ (UIImage *) getImageForFont:(NSString*)fontName withGlyph:(NSString*)glyph withFontSize:(CGFloat)fontSize withColor:(NSString *)hexColor {
++ (NSString *)generateFilePath:(NSString *)glyph withFontName:(NSString *)fontName
+                  withFontSize:(CGFloat)fontSize
+                     withColor:(NSString *)hexColor
+           withExtraIdentifier:(NSString *)identifier
+{
     CGFloat screenScale = RCTScreenScale();
-    UIColor *color = [RCTHelpers colorFromHexString:hexColor];
-    // this will use the same cache folder with react vector icons
-    NSString *fileName = [NSString stringWithFormat:@"tmp/RNVectorIcons_%@_%hu_%.f%@@%.fx.png", fontName, [glyph characterAtIndex:0], fontSize, hexColor, screenScale];
-    NSString *filePath = [NSHomeDirectory() stringByAppendingPathComponent:fileName];
+    NSString *fileName = [NSString stringWithFormat:@"tmp/RNVectorIcons_%@_%@_%hu_%.f%@@%.fx.png",
+                          identifier, fontName,
+                          [glyph characterAtIndex:0],
+                          fontSize, hexColor, screenScale];
+    
+    return [NSHomeDirectory() stringByAppendingPathComponent:fileName];
+}
+
++ (UIImage *)createAndSaveGlyphImage:(NSString *)glyph withFont:(UIFont *)font
+                   withFilePath:(NSString *)filePath
+                      withColor:(UIColor *)color
+{
+    NSAttributedString *attributedString = [[NSAttributedString alloc] initWithString:glyph attributes:@{NSFontAttributeName: font, NSForegroundColorAttributeName: color}];
+    
+    CGSize iconSize = [attributedString size];
+    UIGraphicsBeginImageContextWithOptions(iconSize, NO, 0.0);
+    [attributedString drawAtPoint:CGPointMake(0, 0)];
+    
+    UIImage *iconImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    
+    NSData *imageData = UIImagePNGRepresentation(iconImage);
+    [imageData writeToFile:filePath atomically:YES];
+    return iconImage;
+}
+
++ (UIImage *) getImageForFont:(NSString*)fontName withGlyph:(NSString*)glyph withFontSize:(CGFloat)fontSize withColor:(NSString *)hexColor {
+    
+    NSString *filePath = [self generateFilePath:glyph withFontName:fontName withFontSize:fontSize withColor:hexColor withExtraIdentifier:@""];
     
     if(![[NSFileManager defaultManager] fileExistsAtPath:filePath]) {
         // No cached icon exists, we need to create it and persist to disk
-        
+        UIColor *color = [RCTHelpers colorFromHexString:hexColor];
         UIFont *font = [UIFont fontWithName:fontName size:fontSize];
-        NSAttributedString *attributedString = [[NSAttributedString alloc] initWithString:glyph attributes:@{NSFontAttributeName: font, NSForegroundColorAttributeName: color}];
-        
-        CGSize iconSize = [attributedString size];
-        UIGraphicsBeginImageContextWithOptions(iconSize, NO, 0.0);
-        [attributedString drawAtPoint:CGPointMake(0, 0)];
-        
-        UIImage *iconImage = UIGraphicsGetImageFromCurrentImageContext();
-        UIGraphicsEndImageContext();
-        
-        NSData *imageData = UIImagePNGRepresentation(iconImage);
-        [imageData writeToFile:filePath atomically:YES];
-        return iconImage;
+        return [self createAndSaveGlyphImage:glyph withFont:font withFilePath:filePath withColor:color];
+    }
+    return [UIImage imageWithContentsOfFile:filePath];
+}
+
++ (UIImage *) getImageForFont:(NSString*)fontFamily withGlyph:(NSString*)glyph withFontSize:(CGFloat)fontSize withFontStyle:(NSInteger)style withColor:(NSString *)hexColor {
+    
+    NSNumber *fontWeight = [NSNumber numberWithDouble:UIFontWeightRegular];
+    if (style == 1)
+        fontWeight = [NSNumber numberWithDouble:UIFontWeightUltraLight];
+    else if (style == 2)
+        fontWeight = [NSNumber numberWithDouble:UIFontWeightBold];
+    
+    NSString *identifier = [NSString stringWithFormat:@"FA5.%ld", (long)style];
+    
+    NSString *filePath = [self generateFilePath:glyph withFontName:fontFamily withFontSize:fontSize withColor:hexColor withExtraIdentifier:identifier];
+    
+    if(![[NSFileManager defaultManager] fileExistsAtPath:filePath]) {
+        // No cached icon exists, we need to create it and persist to disk
+        UIColor *color = [RCTHelpers colorFromHexString:hexColor];
+        UIFont *font = [UIFont fontWithName:fontFamily size:fontSize];
+        for (NSString *fontString in [UIFont fontNamesForFamilyName:fontFamily]) {
+            UIFont *testFont = [UIFont fontWithName:fontString size:fontSize];
+            NSDictionary *traits = [testFont.fontDescriptor objectForKey:UIFontDescriptorTraitsAttribute];
+            NSNumber *testFontWeight = traits[UIFontWeightTrait];
+            
+            if (testFontWeight.doubleValue == fontWeight.doubleValue) {
+                font = testFont;
+                break;
+            }
+        }
+        return [self createAndSaveGlyphImage:glyph withFont:font withFilePath:filePath withColor:color];
     }
     return [UIImage imageWithContentsOfFile:filePath];
 }
@@ -257,7 +306,20 @@
 {
     // suport convert with font and uri
     if (json[@"fontName"]){
-        return [RCTHelpers getImageForFont: json[@"fontName"] withGlyph:json[@"glyph"] withFontSize:[RCTConvert CGFloat:json[@"fontSize"]]  withColor:json[@"color"]];
+        CGFloat fontSize = [RCTConvert CGFloat:json[@"fontSize"]];
+        // if we use fontFamily Font Awesome 5 Free
+//        if([json[@"fontName"] isEqualToString: @"Font Awesome 5 Free"]){
+        if(json[@"fontStyle"]){
+            NSString* fontStyle = json[@"fontStyle"];
+            NSInteger style = 0;
+            if([fontStyle isEqualToString:@"light"])
+                style = 1;
+            else if ([fontStyle isEqualToString:@"solid"])
+                style = 2;
+            // hacky way to support font awesome 5 as alternative
+            return [RCTHelpers getImageForFont: @"Font Awesome 5 Free" withGlyph:json[@"glyph"] withFontSize:fontSize withFontStyle: style withColor:json[@"color"]];
+        }
+        return [RCTHelpers getImageForFont: json[@"fontName"] withGlyph:json[@"glyph"] withFontSize:fontSize  withColor:json[@"color"]];
     }
     
     // fallback
