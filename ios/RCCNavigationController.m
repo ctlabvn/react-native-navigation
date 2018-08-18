@@ -171,8 +171,8 @@ NSString const *CALLBACK_ASSOCIATED_ID = @"RCCNavigationController.CALLBACK_ASSO
         [self setButtons:rightButtons viewController:viewController side:@"right" animated:NO];
     }
     
-    NSArray *previewActions = actionParams[@"previewActions"];
-    NSString *previewViewID = actionParams[@"previewViewID"];
+    NSArray *previewActions = actionParams[@"previewActions"];    
+    NSNumber *previewViewID =  [RCTConvert NSNumber:actionParams[@"previewViewID"]];
     if (previewViewID) {
         if ([self.topViewController isKindOfClass:[RCCViewController class]]) {
             RCCViewController *topViewController = ((RCCViewController*)self.topViewController);
@@ -493,9 +493,7 @@ NSString const *CALLBACK_ASSOCIATED_ID = @"RCCNavigationController.CALLBACK_ASSO
     
     if ([side isEqualToString:@"left"]) {
         [viewController.navigationItem setLeftBarButtonItems:barButtonItems animated:animated];
-    }
-    
-    if ([side isEqualToString:@"right"]) {
+    } else if ([side isEqualToString:@"right"]) {
         [viewController.navigationItem setRightBarButtonItems:barButtonItems animated:animated];
     }
 }

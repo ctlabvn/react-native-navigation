@@ -293,7 +293,8 @@ public class ScreenStack {
     private void popToInternal(final String screenInstanceId, final boolean animated, double jsPopTimestamp, @Nullable final OnScreenPop onScreenPop) {
         boolean found = false;
         int popCount = 0;
-        for (Screen screen : stack) {
+        for (int index = stack.size() - 1; index>=0; --index) {
+            Screen screen = stack.get(index);
             if(screen.getScreenInstanceId().equals(screenInstanceId)){
                 found = true;
                 break;
@@ -312,7 +313,7 @@ public class ScreenStack {
         }
 
         // pop previous screens
-        while (popCount>0){
+        while (popCount>1){
             popInternal(animated, jsPopTimestamp, null);
             popCount--;
         }

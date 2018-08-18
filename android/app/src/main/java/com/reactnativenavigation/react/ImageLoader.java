@@ -79,48 +79,50 @@ public class ImageLoader {
         String cacheFilePath = cacheFolderPath + hash + "_" + Integer.toString(fontSize) + scaleSuffix + ".png";
         String cacheFileUrl = "file://" + cacheFilePath;
         File cacheFile = new File(cacheFilePath);
-
+        Bitmap bitmap;
+        
         if(cacheFile.exists()) {
-            return Drawable.createFromPath(cacheFilePath);
-        }
+            bitmap = BitmapFactory.decodeFile(cacheFilePath);
+        } else {
+            // save to cache
+            FileOutputStream fos = null;
+            Typeface typeface = ReactFontManager.getInstance().getTypeface(fontFamily, 0, context.getAssets());
+            Paint paint = new Paint();
+            paint.setTypeface(typeface);
+            paint.setColor(color);
+            paint.setTextSize(size);
+            paint.setAntiAlias(true);
+            Rect textBounds = new Rect();
+            paint.getTextBounds(glyph, 0, glyph.length(), textBounds);
 
-        FileOutputStream fos = null;
-        Typeface typeface = ReactFontManager.getInstance().getTypeface(fontFamily, 0, context.getAssets());
-        Paint paint = new Paint();
-        paint.setTypeface(typeface);
-        paint.setColor(color);
-        paint.setTextSize(size);
-        paint.setAntiAlias(true);
-        Rect textBounds = new Rect();
-        paint.getTextBounds(glyph, 0, glyph.length(), textBounds);
+            bitmap = Bitmap.createBitmap(textBounds.width(), textBounds.height(), Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(bitmap);
+            canvas.drawText(glyph, -textBounds.left, -textBounds.top, paint);
 
-        Bitmap bitmap = Bitmap.createBitmap(textBounds.width(), textBounds.height(), Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
-        canvas.drawText(glyph, -textBounds.left, -textBounds.top, paint);
-
-        try {
-            fos = new FileOutputStream(cacheFile);
-            bitmap.compress(CompressFormat.PNG, 100, fos);
-            fos.flush();
-            fos.close();
-            fos = null;
-        } catch (FileNotFoundException e) {
-            Log.e(TAG, "File not found: " + e.getMessage());
-        } catch (IOException e) {
-            Log.e(TAG, e.getMessage());
-        }
-        finally {
-            if (fos != null) {
-                try {
-                    fos.close();
-                    fos = null;
-                }
-                catch (IOException e) {
-                    e.printStackTrace();
+            try {
+                fos = new FileOutputStream(cacheFile);
+                bitmap.compress(CompressFormat.PNG, 100, fos);
+                fos.flush();
+                fos.close();
+                fos = null;
+            } catch (FileNotFoundException e) {
+                Log.e(TAG, "File not found: " + e.getMessage());
+            } catch (IOException e) {
+                Log.e(TAG, e.getMessage());
+            } finally {
+                if (fos != null) {
+                    try {
+                        fos.close();
+                        fos = null;
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
+
         }
 
+//        return Drawable.createFromPath(cacheFilePath);
         return new BitmapDrawable(NavigationApplication.instance.getResources(), bitmap);
 
     }
