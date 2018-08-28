@@ -428,6 +428,15 @@ NSString const *CALLBACK_ASSOCIATED_ID = @"RCCNavigationController.CALLBACK_ASSO
 
 -(void)setButtons:(NSArray*)buttons viewController:(UIViewController*)viewController side:(NSString*)side animated:(BOOL)animated {
     NSMutableArray *barButtonItems = [NSMutableArray new];
+    BOOL isLeft = [side isEqualToString:@"left"];
+    CGFloat xOffset = 0;
+    // hot fix for iOS7 +
+    if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 7) {
+        xOffset = isLeft ? -10 : 5;
+    }
+    // add iamge inset for ios
+    UIEdgeInsets imageEdgeInsets = UIEdgeInsetsMake(0, xOffset, 0, -xOffset);
+    
     for (NSDictionary *button in buttons) {
         NSString *title = button[@"title"];
         UIImage *iconImage = nil;
@@ -437,9 +446,10 @@ NSString const *CALLBACK_ASSOCIATED_ID = @"RCCNavigationController.CALLBACK_ASSO
         NSString *__nullable systemItemName = button[@"systemItem"];
         UIBarButtonSystemItem systemItem = [RCTConvert UIBarButtonSystemItem:systemItemName];
         
-        UIBarButtonItem *barButtonItem;
+        UIBarButtonItem *barButtonItem; 
         if (iconImage) {
             barButtonItem = [[UIBarButtonItem alloc] initWithImage:iconImage style:UIBarButtonItemStylePlain target:self action:@selector(onButtonPress:)];
+            [barButtonItem setImageInsets:imageEdgeInsets];
         }
         else if (title) {
             barButtonItem = [[UIBarButtonItem alloc] initWithTitle:title style:UIBarButtonItemStylePlain target:self action:@selector(onButtonPress:)];
@@ -489,11 +499,12 @@ NSString const *CALLBACK_ASSOCIATED_ID = @"RCCNavigationController.CALLBACK_ASSO
         if (testID) {
             barButtonItem.accessibilityIdentifier = testID;
         }
+        
     }
     
-    if ([side isEqualToString:@"left"]) {
+    if (isLeft) {
         [viewController.navigationItem setLeftBarButtonItems:barButtonItems animated:animated];
-    } else if ([side isEqualToString:@"right"]) {
+    } else {
         [viewController.navigationItem setRightBarButtonItems:barButtonItems animated:animated];
     }
 }
