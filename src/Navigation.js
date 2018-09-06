@@ -1,8 +1,8 @@
 /*eslint-disable*/
 import React from 'react';
-import {AppRegistry} from 'react-native';
+import { AppRegistry } from 'react-native';
 import platformSpecific from './deprecated/platformSpecificDeprecated';
-import {Screen} from './Screen';
+import { Screen } from './Screen';
 
 import PropRegistry from './PropRegistry';
 
@@ -14,20 +14,29 @@ function registerScreen(screenID, generator) {
   AppRegistry.registerComponent(screenID, generator);
 }
 
-function registerComponent(screenID, generator, store = undefined, Provider = undefined, options = {}) {
-  if (store && Provider) {
-    return _registerComponentRedux(screenID, generator, store, Provider, options);
-  } else {
-    return _registerComponentNoRedux(screenID, generator);
-  }
-}
-
-function _registerComponentNoRedux(screenID, generator) {
+function registerComponent(
+  screenID,
+  generator,
+  store = undefined,
+  Provider = undefined,
+  options = {}
+) {
   const generatorWrapper = function() {
     const InternalComponent = generator();
     if (!InternalComponent) {
-      console.error(`Navigation: ${screenID} registration result is 'undefined'`);
+      console.error(
+        `Navigation: ${screenID} registration result is 'undefined'`
+      );
     }
+    // if have store and Provider, must return ReduxWrapper
+    const RegisteredComponent =
+      store && Provider
+        ? props => (
+            <Provider store={store} {...options}>
+              <InternalComponent {...props} />
+            </Provider>
+          )
+        : InternalComponent;
 
     return class extends Screen {
       static navigatorStyle = InternalComponent.navigatorStyle || {};
@@ -36,52 +45,31 @@ function _registerComponentNoRedux(screenID, generator) {
       constructor(props) {
         super(props);
         this.state = {
-          internalProps: {...props, ...PropRegistry.load(props.screenInstanceID || props.passPropsKey)}
-        }
+          internalProps: {
+            ...props,
+            ...PropRegistry.load(props.screenInstanceID || props.passPropsKey)
+          }
+        };
       }
 
       componentWillReceiveProps(nextProps) {
         this.setState({
-          internalProps: {...PropRegistry.load(this.props.screenInstanceID || this.props.passPropsKey), ...nextProps}
-        })
+          internalProps: {
+            ...PropRegistry.load(
+              this.props.screenInstanceID || this.props.passPropsKey
+            ),
+            ...nextProps
+          }
+        });
       }
 
       render() {
         return (
-          <InternalComponent testID={screenID} navigator={this.navigator} {...this.state.internalProps} />
-        );
-      }
-    };
-  };
-  registerScreen(screenID, generatorWrapper);
-  return generatorWrapper;
-}
-
-function _registerComponentRedux(screenID, generator, store, Provider, options) {
-  const generatorWrapper = function() {
-    const InternalComponent = generator();
-    return class extends Screen {
-      static navigatorStyle = InternalComponent.navigatorStyle || {};
-      static navigatorButtons = InternalComponent.navigatorButtons || {};
-
-      constructor(props) {
-        super(props);
-        this.state = {
-          internalProps: {...props, ...PropRegistry.load(props.screenInstanceID || props.passPropsKey)}
-        }
-      }
-
-      componentWillReceiveProps(nextProps) {
-        this.setState({
-          internalProps: {...PropRegistry.load(this.props.screenInstanceID || this.props.passPropsKey), ...nextProps}
-        })
-      }
-
-      render() {
-        return (
-          <Provider store={store} {...options}>
-            <InternalComponent testID={screenID} navigator={this.navigator} {...this.state.internalProps} />
-          </Provider>
+          <RegisteredComponent
+            testID={screenID}
+            navigator={this.navigator}
+            {...this.state.internalProps}
+          />
         );
       }
     };
@@ -93,7 +81,9 @@ function _registerComponentRedux(screenID, generator, store, Provider, options) 
 function getRegisteredScreen(screenID) {
   const generator = registeredScreens[screenID];
   if (!generator) {
-    console.error(`Navigation.getRegisteredScreen: ${screenID} used but not yet registered`);
+    console.error(
+      `Navigation.getRegisteredScreen: ${screenID} used but not yet registered`
+    );
     return undefined;
   }
   return generator();
@@ -134,7 +124,7 @@ function dismissInAppNotification(params = {}) {
 async function startTabBasedApp(params) {
   try {
     return await platformSpecific.startTabBasedApp(params);
-  } catch(e) {
+  } catch (e) {
     console.error(`Error while starting app: ${e}`);
   }
 }
@@ -142,7 +132,7 @@ async function startTabBasedApp(params) {
 async function startSingleScreenApp(params) {
   try {
     return await platformSpecific.startSingleScreenApp(params);
-  } catch(e) {
+  } catch (e) {
     console.error(`Error while starting app: ${e}`);
   }
 }
